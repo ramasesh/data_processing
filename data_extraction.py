@@ -143,9 +143,11 @@ def extract_in_braces(string):
 def dict_vals_tuple(location_string, dictionary):
 
   keys_to_keep = extract_in_braces(location_string)
-  sorted_dict_keys = sorted(keys_to_keep)
+  #sorted_dict_keys = sorted(keys_to_keep)
+  # Not sure why the above line was in there.  If we want to match the ordering 
+  #  for processing later, it should not be sorted.
 
-  return tuple([dictionary[k] for k in sorted_dict_keys])
+  return tuple([dictionary[k] for k in keys_to_keep])
 
 # TODO Move this somewhere else
 # This is specific to how we load data from the buckets, so I don't want it in
@@ -178,6 +180,35 @@ def grab_from_bucket(config, destination_directory, test_command=False, file_ext
     print(command_to_run)
   else:
     os.system(f'mkdir -p {destination_directory} && gsutil -m cp -r {all_folders_string} {destination_directory}')
+
+def grab_from_bucket_api(config, test_command=False):
+
+  files_to_grab = ['log.json', 'config.json']
+
+  def dump_to_file(blob, file_name):
+    os.makedirs(os.path.dirname(file_name), exist_ok=True)
+    with open(file_name, 'wb') as f:
+      blob.download_to_file(f)
+
+  if type(config) is str:
+    config = load_config(config)
+  all_foldernames = all_folders(config)
+  all_foldernames = [f.replace(',', ', ') for f in all_foldernames]
+
+
+  all_filenames = [os.path.join(a,b) for a in all_foldernames for b in files_to_grab]
+
+  from google.cloud import storage
+  client = storage.Client()
+  bucket = client.get_bucket('ramasesh-bucket-1')
+  for file_name in all_filenames:
+    print(file_name)
+    blob = bucket.get_blob(file_name)
+    
+    dump_to_file(blob, file_name)
+    print(file_name)
+
+    print('----')
 
 def grab_and_process(config_filename, test=False):
   """ run this in project root """

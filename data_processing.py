@@ -169,7 +169,10 @@ def group_datadict_by_attributes(full_datadict, attributes, config=None):
   named_arguments = list(extract_in_braces(config['save_name']))
 
   attribute_indices = [named_arguments.index(attribute) for attribute in attributes]
+  print(attribute_indices)
+
   other_indices = [x for x in range(len(named_arguments)) if x not in attribute_indices]
+  print(other_indices)
 
   grouped_dict =  group_dict_by_dim(full_datadict, attribute_indices)
 
